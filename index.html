@@ -189,6 +189,9 @@ a {
 // Locally store Twitblob login credentials with this key.
 var STORAGE_KEY = "sessionsInfo_sample";
 
+// Store votes remotely using this key.
+var TWITBLOB_KEY = "votes_sample";
+
 var Cfg = {
   info: null,
   submissions: [],
@@ -233,11 +236,11 @@ $(window).ready(function() {
     var updateReq = new XMLHttpRequest();
     var body = {
       token: Cfg.info.token,
-      data: {
-        votes: votes
-      }
+      data: {}
     };
-    
+
+    body.data[TWITBLOB_KEY] = votes;
+
     updateReq.onerror = showError;
     updateReq.onload = function() {
       if (updateReq.status == 200)
@@ -258,7 +261,9 @@ $(window).ready(function() {
     req.onload = function() {
       if (req.status == 200 || req.status == 404) {
         var data;
-        var defaultData = {votes: []};
+        var defaultData = {};
+
+        defaultData[TWITBLOB_KEY] = [];
 
         $("#throbber").removeClass("active");
         if (req.status == 200) {
@@ -268,13 +273,14 @@ $(window).ready(function() {
             showError();
             return;
           }
-          if (!data || !('votes' in data) || !data.votes.length)
+          if (!data || !(TWITBLOB_KEY in data) ||
+              !data[TWITBLOB_KEY].length)
             data = defaultData;
         } else
           data = defaultData;
 
         $("#submissions .is-awesome").each(function(i) {
-          var index = data.votes.indexOf(i);
+          var index = data[TWITBLOB_KEY].indexOf(i);
           this.checked = (index != -1);
         });
       } else

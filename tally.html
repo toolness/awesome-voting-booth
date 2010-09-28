@@ -101,6 +101,9 @@ img {
 <script>
 const BASE_URL = "https://secure.toolness.com/api/twitblob/blobs/";
 
+// Store votes remotely using this key.
+var TWITBLOB_KEY = "votes_sample";
+
 var trustees = [
   "brynn",
   "jessefarmer",
@@ -205,9 +208,10 @@ $(window).ready(function() {
       url: BASE_URL + name,
       dataType: "json",
       success: function(data) {
-        if (data && data.votes && data.votes.length > 0)
+        if (data && data[TWITBLOB_KEY] &&
+            data[TWITBLOB_KEY].length > 0)
           absentees.splice(absentees.indexOf(name), 1);
-          data.votes.forEach(function(id) {
+          data[TWITBLOB_KEY].forEach(function(id) {
             submissions[id].votes.push(name);
           });
         onReqDone();
