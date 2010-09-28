@@ -209,11 +209,12 @@ $(window).ready(function() {
       dataType: "json",
       success: function(data) {
         if (data && data[TWITBLOB_KEY] &&
-            data[TWITBLOB_KEY].length > 0)
+            data[TWITBLOB_KEY].length > 0) {
           absentees.splice(absentees.indexOf(name), 1);
           data[TWITBLOB_KEY].forEach(function(id) {
             submissions[id].votes.push(name);
           });
+        }
         onReqDone();
       },
       error: function(req) {
