@@ -2,7 +2,7 @@ This is a simple voting booth app for [Awesome Foundation Submissions][]. Becaus
 
 Currently this app is in a very prototypical state; there are [DRY][] violations and no unit tests.
 
-A sample instance of the app is running at http://toolness.github.com/awesome-voting-booth/.
+A sample instance of the app is running at [toolness.github.com][].
 
 To modify this app for your own use, search for the word "sample" in the source code and replace it with real data. Also change the value of the `trustees` array in [tally.html][].
 
@@ -10,3 +10,4 @@ To modify this app for your own use, search for the word "sample" in the source 
   [Twitblob API]: http://toolness.github.com/twitblob/
   [DRY]: http://en.wikipedia.org/wiki/Don't_repeat_yourself
   [tally.html]: http://github.com/toolness/awesome-voting-booth/blob/gh-pages/tally.html
+  [toolness.github.com]: http://toolness.github.com/awesome-voting-booth
