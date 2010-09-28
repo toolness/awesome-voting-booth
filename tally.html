@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<base target="_new">
+<title>Awesome Voting Tally &ndash; San Francisco, Sample</title>
+<style>
+body {
+  margin: 1em;
+  padding: 1em;
+  background: #FEF4F9;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12pt;
+}
+
+#subtitle {
+  font-size: 9pt;
+}
+
+#subtitle a {
+  color: inherit;
+}
+
+#header {
+  text-align: center;
+}
+
+#header div#subtitle {
+  padding-bottom: 1em;
+}
+
+#loading {
+  text-align: center;
+  color: gray;
+}
+
+#absent-msg {
+  display: none;
+}
+
+#content {
+  width: 40em;
+  margin: 0 auto;
+  color: #425E6A;
+  text-shadow: white 0px 1px;
+  line-height: 20px;
+}
+
+#tally {
+  display: none;
+  width: 100%;
+}
+
+th {
+  text-align: left;
+  border-bottom: 1px solid black;
+}
+
+td {
+  border-bottom: 1px dotted black;
+}
+
+table, th, td, tr {
+  border-collapse: collapse;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0px;
+  margin: 0px;
+}
+
+li {
+  display: inline;
+}
+
+img {
+  border-style: none;
+}
+</style>
+<div id="content">
+<div id="header">
+  <img src="logo.png">
+  <div id="title"></div>
+  <div id="subtitle">To vote, visit the <a href="index.html">Awesome Voting Booth</a>.</div>
+  <div id="absent-msg">We still need votes from
+    <ul id="absentees"></ul>
+  </div>
+</div>
+<p id="loading">One moment, I need to get the votes for
+  <span id="reqsleft">&infin;</span>
+  more trustees.
+</p>
+<table id="tally">
+  <tr id="headings">
+    <th>Name</th>
+    <th>Votes</th>
+    <th>Voters</th>
+  </tr>
+</table>
+</div>
+<script src="jquery.min.js"></script>
+<script>
+const BASE_URL = "https://secure.toolness.com/api/twitblob/blobs/";
+
+var trustees = [
+  "brynn",
+  "jessefarmer",
+  "mikeyk",
+  "newhighscore",
+  "maltman23",
+  "timhwang",
+  "toolness",
+  "RodBegbie",
+  "callsignbentley",
+  "jtag",
+  "mnrsiat"
+];
+
+var submissions = [];
+var tallies = [];
+var absentees = trustees.slice();
+var reqsLeft = trustees.length;
+
+function onLoadSubmissions(data) {
+  data.reverse();  
+  submissions = submissions.concat(data);
+}
+
+function onReqDone() {
+  reqsLeft--;
+  $("#reqsleft").text(reqsLeft);
+  if (reqsLeft == 0) {
+    submissions.sort(function(a, b) {
+      if (a.votes.length < b.votes.length)
+        return 1;
+      if (a.votes.length > b.votes.length)
+        return -1;
+      if (a.id < b.id)
+        return -1;
+      if (a.id > b.id)
+        return 1;
+      return 0;
+    });
+
+    submissions.forEach(function(entry) {
+      $("#tally").append(makeRow(entry));
+    });
+
+    if (absentees.length > 0) {
+      absentees.forEach(function(name) {
+        var item = $("<li></li>");
+        item.append(makeTwitterAvatar(name));
+        $("#absentees").append(item);
+      });
+      $("#absent-msg").show();
+    }
+
+    $("#loading").hide();
+    $("#tally").show();
+  }
+}
+
+function makeTwitterAvatar(screenName) {
+  var link = $("<a></a>");
+  link.attr("href", "http://twitter.com/" + screenName);
+  link.attr("title", screenName);
+  var img = $("<img>");
+  img.attr("src", "http://img.tweetimag.es/i/" + screenName + "_m");
+  link.append(img);
+  return link;
+}
+
+function makeRow(entry) {
+  var row = $("<tr></tr>");
+
+  var name = $("<td></td>");
+  name.text(entry.Title);
+  row.append(name);
+
+  var votes = $("<td></td>");
+  votes.text(entry.votes.length);
+  row.append(votes);
+
+  var voters = $("<td></td>");
+  var voterList = $("<ul></ul>");
+  entry.votes.sort();
+  entry.votes.forEach(function(name) {
+    var item = $('<li></li>');
+    item.append(makeTwitterAvatar(name));
+    voterList.append(item);
+  });
+  voters.append(voterList);
+  row.append(voters);
+
+  return row;
+}
+
+$(window).ready(function() {
+  $("#reqsleft").text(reqsLeft);
+  for (var i = 0; i < submissions.length; i++) {
+    submissions[i].votes = [];
+    submissions[i].id = i;
+  }
+  trustees.forEach(function(name) {
+    jQuery.ajax({
+      url: BASE_URL + name,
+      dataType: "json",
+      success: function(data) {
+        if (data && data.votes && data.votes.length > 0)
+          absentees.splice(absentees.indexOf(name), 1);
+          data.votes.forEach(function(id) {
+            submissions[id].votes.push(name);
+          });
+        onReqDone();
+      },
+      error: function(req) {
+        onReqDone();
+      }
+    });
+  });
+  $("#title").text(document.title);
+});
+</script>
+<script src="load-sample-submissions.js"></script>

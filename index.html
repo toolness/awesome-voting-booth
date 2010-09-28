@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<base target="_new">
+<title>Awesome Voting Booth &ndash; San Francisco, Sample</title>
+<style>
+body {
+  margin: 1em;
+  padding: 1em;
+  background: #FEF4F9;
+  font-family: 'Helvetica Neue', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12pt;
+}
+
+#subtitle {
+  font-size: 9pt;
+}
+
+#subtitle a {
+  color: inherit;
+}
+
+#error {
+  display: none;
+  width: 100%;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  background: firebrick;
+  color: white;
+  text-align: center;
+  padding: 0.25em;
+  font-size: 9pt;
+}
+
+#templates {
+  display: none;
+}
+
+#header {
+  text-align: center;
+}
+
+#login-state {
+  padding-top: 1em;
+}
+
+#content {
+  width: 40em;
+  margin: 0 auto;
+  color: #425E6A;
+  text-shadow: white 0px 1px;
+  line-height: 20px;
+  display: none;
+  overflow-x: hidden;
+}
+
+#twitter-login-button {
+  cursor: pointer;
+}
+
+#twitter-logout-button {
+  font-size: 9pt;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+span#twitter-logout-button:hover {
+  text-decoration: underline;
+}
+
+#throbber {
+  position: fixed;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  font-size: 9pt;
+  -webkit-transition: opacity 500ms ease-out;
+  -moz-transition: opacity 500ms ease-out;
+}
+
+div#throbber.active {
+  opacity: 1;
+}
+
+.logged-in {
+  display: none;
+}
+
+.login-username {
+  font-weight: bold;
+}
+
+.checkbox {
+  float: right;
+}
+
+label {
+  font-size: 9pt;
+  text-shadow: none;
+}
+
+a {
+  color: rgb(243,52,134);
+}
+
+/** SUBMISSIONS **/
+
+.submission {
+  margin-bottom: 60px;
+}
+.submission h3 {
+  color: #F33486;
+  display: inline;
+}
+.submission .contact_info {
+  display: none;
+}
+.submission .chapter {
+  display: none;
+}
+.submission .chapter, .submission .date {
+  float: right;
+}
+.submission .description {
+  margin: 10px 0px 4px 0px;
+}
+.submission .name {
+  background-color: rgb(253, 223, 236);
+  padding: 5px 10px;
+  -moz-border-radius: 18px;
+  -webkit-border-radius: 18px;
+  border-radius: 18px;
+}
+.submission .chapter {
+  font-weight: bold;
+  font-size: 0.8em;
+}
+.submission .name a {
+  text-decoration: none;
+}
+.submission .name a:hover {
+  text-decoration: underline;
+}
+
+.submission h4 {
+  font-size: 12pt;
+  font-weight: bold;
+}
+
+.submission .use {
+  padding-bottom: 1em;
+}
+
+.submission .contact_info {
+  font-size: 9pt;
+  padding: 1em;
+  background: white;
+  -moz-border-radius: 18px;
+  -webkit-border-radius: 18px;
+  border-radius: 18px;
+}
+
+.submission .contact_info h3, .submission .contact_info a {
+  color: black;
+}
+</style>
+<div id="throbber">Syncing...</div>
+<div id="error">Sorry, an error occurred. Try logging out and back in.</div>
+<div id="content">
+<div id="header">
+<img src="logo.png">
+<div id="title"></div>
+<div id="subtitle">To view the vote results, see the <a href="tally.html">Awesome Voting Tally</a>.</div>
+<div id="login-state">
+<div class="logged-out">
+  <img id="twitter-login-button"
+       src="twitter-login.png">
+</div>
+<div class="logged-in">
+  <div>You are now logged in as <span
+  class="login-username"></span>.</div>
+  <div><span id="twitter-logout-button">Log Out</span></div>
+</div>
+</div>
+</div>
+<script src="jquery.min.js"></script>
+<script src="https://secure.toolness.com/json2.js"></script>
+<script>
+// Locally store Twitblob login credentials with this key.
+var STORAGE_KEY = "sessionsInfo_sample";
+
+var Cfg = {
+  info: null,
+  submissions: [],
+  twitblobURL: "https://secure.toolness.com/api/twitblob"
+};
+
+function onLoadSubmissions(data) {
+  data.reverse();
+  Cfg.submissions = Cfg.submissions.concat(data);
+}
+
+function trim(text) {
+  return text.replace(/^\s+|\s+$/g, '');
+}
+
+function paragraphify(query, text) {
+  text = trim(text).split("\r\n");
+  text.forEach(function(contents) {
+    query.append(document.createTextNode(contents));
+    query.append(document.createElement("br"));
+  });
+}
+
+$(window).ready(function() {
+  var popup = null;
+
+  function showError() {
+    $("#error").slideDown();
+  }
+
+  function blobUrl() {
+    return Cfg.twitblobURL + '/blobs/' + Cfg.info.screen_name;
+  }
+
+  function postVotes() {
+    var votes = [];
+    $("#submissions .is-awesome").each(function(i) {
+      if (this.checked)
+        votes.push(i);
+    });
+
+    var updateReq = new XMLHttpRequest();
+    var body = {
+      token: Cfg.info.token,
+      data: {
+        votes: votes
+      }
+    };
+    
+    updateReq.onerror = showError;
+    updateReq.onload = function() {
+      if (updateReq.status == 200)
+        $("#throbber").removeClass("active");
+      else
+        showError();
+      updateReq.onerror = null;
+    }
+    updateReq.open('POST', blobUrl());
+    updateReq.setRequestHeader('Content-Type', 'application/json');
+    $("#throbber").addClass("active");
+    updateReq.send(JSON.stringify(body));
+  }
+
+  function getVotes() {
+    var req = new XMLHttpRequest();
+    req.onerror = showError;
+    req.onload = function() {
+      if (req.status == 200 || req.status == 404) {
+        var data;
+        var defaultData = {votes: []};
+
+        $("#throbber").removeClass("active");
+        if (req.status == 200) {
+          try {
+            data = JSON.parse(req.responseText);
+          } catch (e) {
+            showError();
+            return;
+          }
+          if (!data || !('votes' in data) || !data.votes.length)
+            data = defaultData;
+        } else
+          data = defaultData;
+
+        $("#submissions .is-awesome").each(function(i) {
+          var index = data.votes.indexOf(i);
+          this.checked = (index != -1);
+        });
+      } else
+        showError();
+      req.onerror = null;
+    }
+    req.open('GET', blobUrl());
+    req.setRequestHeader('Content-Type', 'application/json');
+    $("#throbber").addClass("active");
+    req.send(null);
+  }
+
+  function setInfo(newInfo) {
+    Cfg.info = newInfo;
+    if (Cfg.info == null) {
+      $(".logged-in").hide();
+      $(".logged-out").show();
+    } else {
+      $(".login-username").text(Cfg.info.screen_name);
+      $(".logged-in").show();
+      $(".logged-out").hide();
+      if (popup != null) {
+        popup.close();
+        popup = null;
+      }
+      getVotes();
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Cfg.info));
+  }
+
+  Cfg.submissions.forEach(function(entry) {
+    var elem = $("#templates .submission").clone();
+    elem.find(".title a").attr("href", entry.URL)
+                         .text(entry.Title);
+    paragraphify(elem.find(".description"), entry.Description);
+    paragraphify(elem.find(".use"), entry.Use);
+    elem.find(".name a").attr("title", "View contact info for " + entry.Name)
+                        .text(entry.Name);
+    elem.find(".date").text(entry.Date);
+    elem.find(".email p a").attr("href", "mailto:" + entry.Email)
+                           .text(entry.Email);
+    elem.find(".phone p").text(entry.Phone);
+    $("#submissions").append(elem);
+  });
+
+  window.addEventListener("message", function(event) {
+    setInfo(JSON.parse(event.data));
+  }, false);
+
+  $("#twitter-logout-button").click(function() {
+    setInfo(null);
+  });
+
+  $("#twitter-login-button").click(function() {
+    popup = window.open(Cfg.twitblobURL + '/login/', 'login',
+                        'width=640,height=480');
+  });
+
+  if (localStorage.getItem(STORAGE_KEY) != null)
+    setInfo(JSON.parse(localStorage.getItem(STORAGE_KEY)));
+  else
+    setInfo(null);
+
+  $("#title").text(document.title);
+  $(".name a").click(function() {
+    $(this).parent().siblings(".contact_info").slideToggle();
+    return false;
+  });
+  $("#submissions .title").each(function(i) {
+    var id = "is-awesome-" + i;
+    var box = $("#templates .checkbox").clone();
+    box.find("input").attr("id", id);
+    box.find("label").attr("for", id);
+    $(this).after(box);
+  });
+  $("#submissions .is-awesome").change(postVotes);
+  $(".title a").each(function(i) {
+    $(this).attr("name", i);
+  });
+  if (window.location.hash && window.location.hash != "#") {
+    // Quickly "refresh" the hash so the browser goes to
+    // one of the new anchors we just created.
+    var realHash = window.location.hash;
+    window.location.hash = "#";
+    window.location.hash = realHash;
+  }
+});
+
+$(window).load(function() {
+  $("#content").fadeIn();
+});
+</script>
+<script src="load-sample-submissions.js"></script>
+<div id="templates">
+  <div class="checkbox logged-in">
+    <input type="checkbox" class="is-awesome">
+    <label>Awesome.</label>
+  </div>
+  <div class="submission"> 
+    <h3 class="title"><a href="#"></a></h3> 
+    <div class="description"></div>
+    <h4>Use of Funding</h4>
+    <div class="use"></div>
+    <small class="name"><a href="#"></a></small> 
+    <small class="date"></small> 
+    <div class="contact_info"> 
+      <div class="email"><h3>Email</h3><p><a href="#"></a></p></div> 
+      <div class="phone"><h3>Phone</h3><p></p></div> 
+    </div>
+  </div>
+</div>
+<div id="submissions"></div>
+</div>
