@@ -3,14 +3,22 @@ import csv
 import json
 import urllib
 import urllib2
+from datetime import datetime
 from optparse import OptionParser
 
+dateformat = "%Y-%m-%d %H:%M:%S UTC"
 usage = "%prog [options] yyyy-mm,yyyy-mm,... username password"
 parser = OptionParser(usage=usage)
 parser.add_option("", "--chapter-id", dest="chapter_id",
                   default="4", help="chapter id (default is 4 for SF)")
+parser.add_option("", "--cutoff-start", dest="cutoff_start",
+                  default="2000-01-01 00:00:01 UTC",
+                  help="any submissions earlier than or equal to this "
+                       "date will be culled.")
 
 (options, args) = parser.parse_args()
+
+options.cutoff_start = datetime.strptime(options.cutoff_start, dateformat)
 
 url = "http://awesomefoundation.org/submissions.csv"
 
@@ -38,6 +46,9 @@ for period in periods:
     full_url = "%s?%s" % (url, queryargs)
     response = opener.open(full_url)
     reader = csv.DictReader(response)
-    rows.extend([row for row in reader])
+    for row in reader:
+        date = datetime.strptime(row['Date'], dateformat)
+        if date > options.cutoff_start:
+            rows.append(row)
 
 print json.dumps(rows, indent=2)
