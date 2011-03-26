@@ -14,7 +14,8 @@ parser.add_option("", "--chapter-id", dest="chapter_id",
 parser.add_option("", "--cutoff-start", dest="cutoff_start",
                   default="2000-01-01 00:00:01 UTC",
                   help="any submissions earlier than or equal to this "
-                       "date will be culled.")
+                       "date will be culled. Use a format like "
+                       "'2000-01-01 00:00:01 UTC'.")
 
 (options, args) = parser.parse_args()
 
