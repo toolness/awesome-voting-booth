@@ -146,8 +146,8 @@ function onReqDone() {
       return 0;
     });
 
-    jQuery.each(submissions, function(i) {
-      $("#tally").append(makeRow(this, i+1));
+    submissions.forEach(function(entry) {
+      $("#tally").append(makeRow(entry));
     });
 
     if (absentees.length > 0) {
@@ -174,11 +174,11 @@ function makeTwitterAvatar(screenName) {
   return link;
 }
 
-function makeRow(entry, id) {
+function makeRow(entry) {
   var row = $("<tr></tr>");
 
   var name = $('<td><a class="booth-link"></a></td>');
-  var link = "index.html#" + id;
+  var link = "index.html#" + (entry.id + 1);
   name.find("a").attr("href", link).text(entry.Title);
   row.append(name);
 
