@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <base target="_new">
-<title>Awesome Voting Booth &ndash; San Francisco, Sample</title>
+<title>Awesome Voting Booth &ndash; Loading...</title>
 <style>
 body {
   margin: 1em;
@@ -187,28 +187,30 @@ a {
 <script src="https://secure.toolness.com/json2.js"></script>
 <script>
 // Locally store Twitblob login credentials with this key.
-var STORAGE_KEY = "sessionsInfo_sample";
+var STORAGE_KEY = "sessionsInfo_";
 
 // Store votes remotely using this key.
-var TWITBLOB_KEY = "votes_sample";
+var TWITBLOB_KEY = "votes_";
 
 var Cfg = {
   info: null,
   submissions: [],
-  twitblobURL: "https://secure.toolness.com/api/twitblob"
+  twitblobURL: null
 };
 
-function onLoadSubmissions(data) {
-  data.reverse();
-  Cfg.submissions = Cfg.submissions.concat(data);
-}
-
-function trim(text) {
-  return text.replace(/^\s+|\s+$/g, '');
+function setConfig(data) {
+  data.submissions.reverse();
+  Cfg.submissions = Cfg.submissions.concat(data.submissions);
+  Cfg.twitblobURL = data.twitblobURL;
+  STORAGE_KEY += data.pollID;
+  TWITBLOB_KEY += data.pollID;
+  
+  var title = data.chapter + ", " + data.pollName;
+  document.title = document.title.replace("Loading...", title);
 }
 
 function paragraphify(query, text) {
-  text = trim(text).split("\r\n");
+  text = jQuery.trim(text).split("\r\n");
   text.forEach(function(contents) {
     query.append(document.createTextNode(contents));
     query.append(document.createElement("br"));
@@ -373,7 +375,7 @@ $(window).load(function() {
   $("#content").fadeIn();
 });
 </script>
-<script src="load-sample-submissions.js"></script>
+<script src="load-config.js"></script>
 <div id="templates">
   <div class="checkbox logged-in">
     <input type="checkbox" class="is-awesome">

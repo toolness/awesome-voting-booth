@@ -4,7 +4,7 @@ Currently this app is in a very prototypical state; there are [DRY][] violations
 
 A sample instance of the app is running at [toolness.github.com][].
 
-To modify this app for your own use, search for the word "sample" in the source code and replace it with real data. Also change the value of the `trustees` array in [tally.html][].
+To modify this app for your own use, change the `load-config.js` file as needed. You can use the `pull_submissions.py` script to fill in the `submissions` key.
 
   [Awesome Foundation Submissions]: http://awesomefoundation.org/submissions/new
   [Twitblob API]: http://toolness.github.com/twitblob/
