@@ -327,8 +327,11 @@ $(window).ready(function() {
 
   Cfg.submissions.forEach(function(entry) {
     var elem = $("#templates .submission").clone();
-    elem.find(".title a").attr("href", entry.URL)
-                         .text(entry.Title);
+    if (!entry.URL || entry.URL.length == 0) {
+      elem.find(".title").text(entry.Title);
+    } else
+      elem.find(".title a").attr("href", entry.URL)
+                           .text(entry.Title);
     paragraphify(elem.find(".description"), entry.Description);
     paragraphify(elem.find(".use"), entry.Use);
     elem.find(".name a").attr("title", "View contact info for " + entry.Name)

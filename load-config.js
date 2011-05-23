@@ -27,6 +27,17 @@ setConfig({
       "Date": "2010-09-16 23:11:43 UTC", 
       "Email": "test@test.com", 
       "Name": "Bob Jones"
+    },
+    {
+      "Chapter": "San Francisco", 
+      "Use": "Do good stuff.", 
+      "Description": "I refuse to provide a URL.", 
+      "Title": "No URL For Me", 
+      "URL": "", 
+      "Phone": "555-555-1234", 
+      "Date": "2010-09-16 23:11:43 UTC", 
+      "Email": "test@test.com", 
+      "Name": "Bob Jones"
     }
   ]
 });
