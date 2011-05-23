@@ -68,20 +68,6 @@ span#twitter-logout-button:hover {
   text-decoration: underline;
 }
 
-#throbber {
-  position: fixed;
-  top: 0;
-  left: 0;
-  opacity: 0;
-  font-size: 9pt;
-  -webkit-transition: opacity 500ms ease-out;
-  -moz-transition: opacity 500ms ease-out;
-}
-
-div#throbber.active {
-  opacity: 1;
-}
-
 .logged-in {
   display: none;
 }
@@ -92,6 +78,12 @@ div#throbber.active {
 
 .checkbox {
   float: right;
+}
+
+div.highlight {
+  position: absolute;
+  background: yellow;
+  z-index: -1;
 }
 
 label {
@@ -164,7 +156,6 @@ a {
   color: black;
 }
 </style>
-<div id="throbber">Syncing...</div>
 <div id="error">Sorry, an error occurred. Try logging out and back in.</div>
 <div id="content">
 <div id="header">
@@ -217,6 +208,26 @@ function paragraphify(query, text) {
   });
 }
 
+jQuery.fn.extend({
+  setDisabled: function(disabled) {
+    this.each(function() {
+      this.disabled = disabled;
+    });
+  },
+  highlight: function() {
+    var pos = this.position();
+    var highlight = $('<div class="highlight"></div>');
+    highlight.css({
+      top: pos.top,
+      left: pos.left,
+      width: this.outerWidth(),
+      height: this.outerHeight()
+    });
+    $(document.body).append(highlight);
+    return highlight;
+  }
+});
+
 $(window).ready(function() {
   var popup = null;
 
@@ -228,7 +239,7 @@ $(window).ready(function() {
     return Cfg.twitblobURL + '/blobs/' + Cfg.info.screen_name;
   }
 
-  function postVotes() {
+  function postVotes(success) {
     var votes = [];
     $("#submissions .is-awesome").each(function(i) {
       if (this.checked)
@@ -246,18 +257,17 @@ $(window).ready(function() {
     updateReq.onerror = showError;
     updateReq.onload = function() {
       if (updateReq.status == 200)
-        $("#throbber").removeClass("active");
+        success();
       else
         showError();
       updateReq.onerror = null;
     }
     updateReq.open('POST', blobUrl());
     updateReq.setRequestHeader('Content-Type', 'application/json');
-    $("#throbber").addClass("active");
     updateReq.send(JSON.stringify(body));
   }
 
-  function getVotes() {
+  function getVotes(success) {
     var req = new XMLHttpRequest();
     req.onerror = showError;
     req.onload = function() {
@@ -267,7 +277,6 @@ $(window).ready(function() {
 
         defaultData[TWITBLOB_KEY] = [];
 
-        $("#throbber").removeClass("active");
         if (req.status == 200) {
           try {
             data = JSON.parse(req.responseText);
@@ -285,13 +294,13 @@ $(window).ready(function() {
           var index = data[TWITBLOB_KEY].indexOf(i);
           this.checked = (index != -1);
         });
+        success();
       } else
         showError();
       req.onerror = null;
     }
     req.open('GET', blobUrl());
     req.setRequestHeader('Content-Type', 'application/json');
-    $("#throbber").addClass("active");
     req.send(null);
   }
 
@@ -304,11 +313,14 @@ $(window).ready(function() {
       $(".login-username").text(Cfg.info.screen_name);
       $(".logged-in").show();
       $(".logged-out").hide();
+      $("#submissions .is-awesome").setDisabled(true);
       if (popup != null) {
         popup.close();
         popup = null;
       }
-      getVotes();
+      getVotes(function() {
+        $("#submissions .is-awesome").setDisabled(false);
+      });
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(Cfg.info));
   }
@@ -341,11 +353,6 @@ $(window).ready(function() {
                         'width=640,height=480');
   });
 
-  if (localStorage.getItem(STORAGE_KEY) != null)
-    setInfo(JSON.parse(localStorage.getItem(STORAGE_KEY)));
-  else
-    setInfo(null);
-
   $("#title").text(document.title);
   $(".name a").click(function() {
     $(this).parent().siblings(".contact_info").slideToggle();
@@ -358,10 +365,23 @@ $(window).ready(function() {
     box.find("label").attr("for", id);
     $(this).after(box);
   });
-  $("#submissions .is-awesome").change(postVotes);
+  $("#submissions .is-awesome").change(function() {
+    var highlight = $(this).parent().highlight();
+    postVotes(function() {
+      highlight.fadeOut(function() {
+        highlight.remove();
+      });
+    });
+  });
   $(".title a").each(function(i) {
     $(this).attr("name", i);
   });
+
+  if (localStorage.getItem(STORAGE_KEY) != null)
+    setInfo(JSON.parse(localStorage.getItem(STORAGE_KEY)));
+  else
+    setInfo(null);
+
   if (window.location.hash && window.location.hash != "#") {
     // Quickly "refresh" the hash so the browser goes to
     // one of the new anchors we just created.
