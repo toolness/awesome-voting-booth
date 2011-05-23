@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<base target="_new">
 <title>Awesome Voting Booth &ndash; Loading...</title>
 <style>
 body {
@@ -327,11 +326,12 @@ $(window).ready(function() {
 
   Cfg.submissions.forEach(function(entry) {
     var elem = $("#templates .submission").clone();
-    if (!entry.URL || entry.URL.length == 0) {
-      elem.find(".title").text(entry.Title);
+    elem.find(".title a").text(entry.Title);
+    if (entry.URL && entry.URL.length) {
+      elem.find(".website a").attr("href", entry.URL)
+                             .text(entry.URL);
     } else
-      elem.find(".title a").attr("href", entry.URL)
-                           .text(entry.Title);
+      elem.find(".website").remove();
     paragraphify(elem.find(".description"), entry.Description);
     paragraphify(elem.find(".use"), entry.Use);
     elem.find(".name a").attr("title", "View contact info for " + entry.Name)
@@ -377,7 +377,7 @@ $(window).ready(function() {
     });
   });
   $(".title a").each(function(i) {
-    $(this).attr("name", i);
+    $(this).attr("name", i).attr("href", "#" + i);
   });
 
   if (localStorage.getItem(STORAGE_KEY) != null)
@@ -405,10 +405,13 @@ $(window).load(function() {
     <label>Awesome.</label>
   </div>
   <div class="submission"> 
-    <h3 class="title"><a href="#"></a></h3> 
+    <h3 class="title"><a name="permalink"></a></h3> 
     <div class="description"></div>
     <h4>Use of Funding</h4>
     <div class="use"></div>
+    <div class="website">
+      <p><strong>Website:</strong> <a href="#" target="_new"></a></p>
+    </div>
     <small class="name"><a href="#"></a></small> 
     <small class="date"></small> 
     <div class="contact_info"> 
