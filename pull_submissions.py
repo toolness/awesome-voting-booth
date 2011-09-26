@@ -40,7 +40,8 @@ opener = urllib2.build_opener(handler)
 rows = []
 
 for period in periods:
-    params = dict(period=period.strip(),
+    params = dict(period_start=period.strip() + "-01",
+                  period_end=period.strip() + "-01",
                   chapter_id=options.chapter_id,
                   exclude_unspecified='1')
     queryargs = urllib.urlencode(params)
